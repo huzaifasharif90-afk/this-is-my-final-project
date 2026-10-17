@@ -4,17 +4,21 @@ import streamlit as st
 import pytesseract
 from pdf2image import convert_from_path
 from langchain_community.document_loaders import PyPDFLoader
-import google.generativeai as genai
-
-# Streamlit will pull your key securely from the vault behind the scenes
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-genai.configure(api_key=GEMINI_API_KEY)
-
+from google import genai  # Modern official Google library
 
 st.set_page_config(page_title="Quranic AI Study Assistant", page_icon="📖", layout="wide")
 
 st.title("📖 Quranic AI Study Assistant")
-st.markdown("Upload any Surah translation PDF (supports both standard text and scanned image PDFs) to automatically generate study insights using premium Gemini 2.5 Flash!")
+st.markdown("Upload any Surah translation PDF (supports both standard text and scanned image PDFs) to automatically generate study insights using premium Gemini 1.5 Flash!")
+
+# Streamlit will pull your key securely from the vault behind the scenes
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+
+# Correct modern client initialization
+try:
+    client = genai.Client(api_key=GEMINI_API_KEY)
+except Exception as e:
+    client = None
 
 uploaded_file = st.file_uploader("Choose a Surah PDF file", type=["pdf"])
 
@@ -76,47 +80,63 @@ if uploaded_file is not None:
             if selected_q and selected_q != "-- Select a Question --":
                 st.markdown(f"### 📝 Analysis for: *{selected_q}*")
 
-                with st.spinner("Generating AI Analysis using Gemini 2.5..."):
-                    prompt = f"""
-                    You are an expert Quranic scholar and academic study assistant.
-                    Use the following parsed text from a Surah translation to answer the study question.
-                    If the text is noisy or contains OCR transcription errors, ignore the gibberish, extract the true essence/meanings, and provide an accurate, clear scholarly answer.
+                if client:
+                    with st.spinner("Generating AI Analysis using Gemini..."):
+                        prompt = f"""
+                        You are an expert Quranic scholar and academic study assistant.
+                        Use the following parsed text from a Surah translation to answer the study question.
+                        If the text is noisy or contains OCR transcription errors, ignore the gibberish, extract the true essence/meanings, and provide an accurate, clear scholarly answer.
 
-                    --- START SURAH TEXT ---
-                    {full_text[:3000]}
-                    --- END SURAH TEXT ---
+                        --- START SURAH TEXT ---
+                        {full_text[:3000]}
+                        --- END SURAH TEXT ---
 
-                    STUDY QUESTION: {selected_q}
+                        STUDY QUESTION: {selected_q}
 
-                    Format your response beautifully with 3 parts:
-                    1. "Key Passage Insight": A clear, readable English translation of relevant verses.
-                    2. "Detailed Academic Analysis": Explaining the context, core concepts, and grammar/narrative keys.
-                    3. "Modern Takeaway / Application": Practical actions a modern believer can implement in daily life.
-                    """
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    response = model.generate_content(prompt)
-                    st.markdown(response.text)
+                        Format your response beautifully with 3 parts:
+                        1. "Key Passage Insight": A clear, readable English translation of relevant verses.
+                        2. "Detailed Academic Analysis": Explaining the context, core concepts, and grammar/narrative keys.
+                        3. "Modern Takeaway / Application": Practical actions a modern believer can implement in daily life.
+                        """
+                        try:
+                            # Correct modern API call syntax
+                            response = client.models.generate_content(
+                                model='gemini-1.5-flash',
+                                contents=prompt,
+                            )
+                            st.markdown(response.text)
+                        except Exception as api_err:
+                            st.error(f"Gemini API request failed: {api_err}")
+                else:
+                    st.error("Gemini client initialization failed. Check your API Key Secrets setup.")
 
             st.markdown("---")
             st.markdown("### 💬 Ask the Surah Any Custom Question")
             user_query = st.text_input("Type your custom question here:", placeholder="e.g., What does the Surah say about mercy or the flight of birds?")
 
             if user_query:
-                st.markdown("### 🤖 Live AI Scholar Response")
-                with st.spinner("Querying Gemini 2.5..."):
-                    prompt = f"""
-                    You are an expert Quranic scholar. Use the parsed text of this Surah to answer the user's custom question.
-                    Provide references to verse content and explanations in clear English.
+                if client:
+                    st.markdown("### 🤖 Live AI Scholar Response")
+                    with st.spinner("Querying Gemini..."):
+                        prompt = f"""
+                        You are an expert Quranic scholar. Use the parsed text of this Surah to answer the user's custom question.
+                        Provide references to verse content and explanations in clear English.
 
-                    --- START SURAH TEXT ---
-                    {full_text[:3000]}
-                    --- END SURAH TEXT ---
+                        --- START SURAH TEXT ---
+                        {full_text[:3000]}
+                        --- END SURAH TEXT ---
 
-                    USER QUESTION: {user_query}
-                    """
-                    model = genai.GenerativeModel("gemini-1.5-flash")
-                    response = model.generate_content(prompt)
-                    st.success(response.text)
+                        USER QUESTION: {user_query}
+                        """
+                        try:
+                            # Correct modern API call syntax
+                            response = client.models.generate_content(
+                                model='gemini-1.5-flash',
+                                contents=prompt,
+                            )
+                            st.success(response.text)
+                        except Exception as api_err:
+                            st.error(f"Gemini API request failed: {api_err}")
 
         except Exception as e:
             st.error(f"An error occurred while reading the PDF: {e}")

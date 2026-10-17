@@ -101,7 +101,7 @@ if uploaded_file is not None:
                         try:
                             # Correct modern API call syntax
                             response = client.models.generate_content(
-                                model='gemini-1.5-flash',
+                                model='gemini-3.8-flash',
                                 contents=prompt,
                             )
                             st.markdown(response.text)
@@ -131,7 +131,7 @@ if uploaded_file is not None:
                         try:
                             # Correct modern API call syntax
                             response = client.models.generate_content(
-                                model='gemini-1.5-flash',
+                                model='gemini-3.8-flash',
                                 contents=prompt,
                             )
                             st.success(response.text)

@@ -1,6 +1,6 @@
 streamlit
 pypdf
 langchain-community
-google-generativeai
+google-genai
 pdf2image
 pytesseract

@@ -93,7 +93,7 @@ if uploaded_file is not None:
                     2. "Detailed Academic Analysis": Explaining the context, core concepts, and grammar/narrative keys.
                     3. "Modern Takeaway / Application": Practical actions a modern believer can implement in daily life.
                     """
-                    model = genai.GenerativeModel("gemini-2.5-flash")
+                    model = genai.GenerativeModel("gemini-1.5-flash")
                     response = model.generate_content(prompt)
                     st.markdown(response.text)
 
@@ -114,7 +114,7 @@ if uploaded_file is not None:
 
                     USER QUESTION: {user_query}
                     """
-                    model = genai.GenerativeModel("gemini-2.5-flash")
+                    model = genai.GenerativeModel("gemini-1.5-flash")
                     response = model.generate_content(prompt)
                     st.success(response.text)
 

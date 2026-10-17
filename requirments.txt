@@ -1,0 +1,6 @@
+streamlit
+pypdf
+langchain-community
+google-generativeai
+pdf2image
+pytesseract
